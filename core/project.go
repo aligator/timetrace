@@ -3,7 +3,6 @@ package core
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -71,13 +70,13 @@ func (t *Timetrace) ListProjects() ([]*Project, error) {
 func (t *Timetrace) SaveProject(project Project, force bool) error {
 	path := t.fs.ProjectFilepath(project.Key)
 
-	if _, err := os.Stat(path); os.IsExist(err) && !force {
-		return ErrProjectAlreadyExists
-	}
-
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	exists, err := t.fs.Exists(path)
 	if err != nil {
 		return err
+	}
+
+	if exists && !force {
+		return ErrProjectAlreadyExists
 	}
 
 	bytes, err := json.MarshalIndent(&project, "", "\t")
@@ -85,7 +84,7 @@ func (t *Timetrace) SaveProject(project Project, force bool) error {
 		return err
 	}
 
-	_, err = file.Write(bytes)
+	_, err = t.fs.Write(path, bytes)
 
 	return err
 }
@@ -120,7 +119,7 @@ func (t *Timetrace) DeleteProject(project Project) error {
 }
 
 func (t *Timetrace) loadProject(path string) (*Project, error) {
-	file, err := ioutil.ReadFile(path)
+	file, err := t.fs.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, ErrProjectNotFound

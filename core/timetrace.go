@@ -29,6 +29,9 @@ type Filesystem interface {
 	RecordDirFromDate(date time.Time) string
 	EnsureDirectories() error
 	EnsureRecordDir(date time.Time) error
+	ReadFile(filename string) ([]byte, error)
+	Exists(path string) (bool, error)
+	Write(path string, bytes []byte) (int, error)
 }
 
 type Timetrace struct {

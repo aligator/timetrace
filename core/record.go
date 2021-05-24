@@ -3,7 +3,6 @@ package core
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"time"
@@ -61,16 +60,16 @@ func (t *Timetrace) ListRecords(date time.Time) ([]*Record, error) {
 func (t *Timetrace) SaveRecord(record Record, force bool) error {
 	path := t.fs.RecordFilepath(record.Start)
 
-	if _, err := os.Stat(path); os.IsExist(err) && !force {
-		return ErrRecordAlreadyExists
-	}
-
-	if err := t.fs.EnsureRecordDir(record.Start); err != nil {
+	exists, err := t.fs.Exists(path)
+	if err != nil {
 		return err
 	}
 
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-	if err != nil {
+	if exists && !force {
+		return ErrProjectAlreadyExists
+	}
+
+	if err := t.fs.EnsureRecordDir(record.Start); err != nil {
 		return err
 	}
 
@@ -79,7 +78,7 @@ func (t *Timetrace) SaveRecord(record Record, force bool) error {
 		return err
 	}
 
-	_, err = file.Write(bytes)
+	_, err = t.fs.Write(path, bytes)
 
 	return err
 }
@@ -225,7 +224,7 @@ func (t *Timetrace) loadOldestRecord(date time.Time) (*Record, error) {
 }
 
 func (t *Timetrace) loadRecord(path string) (*Record, error) {
-	file, err := ioutil.ReadFile(path)
+	file, err := t.fs.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, ErrRecordNotFound

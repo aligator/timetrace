@@ -195,3 +195,24 @@ func (fs *Fs) rootDir() string {
 
 	return filepath.Join(homeDir, rootDirName)
 }
+
+func (fs *Fs) ReadFile(filename string) ([]byte, error) {
+	return ioutil.ReadFile(filename)
+}
+
+func (fs *Fs) Exists(path string) (bool, error) {
+	if _, err := os.Stat(path); os.IsExist(err) {
+		return true, nil
+	} else {
+		return false, err
+	}
+
+}
+
+func (fs *Fs) Write(path string, bytes []byte) (int, error) {
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return 0, err
+	}
+	return file.Write(bytes)
+}
