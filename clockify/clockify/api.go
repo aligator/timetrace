@@ -54,6 +54,10 @@ func (a *API) Projects() ([]model.Project, error) {
 			return nil, err
 		}
 
+		q := req.URL.Query()
+		q.Add("archived", "false")
+		req.URL.RawQuery = q.Encode()
+
 		res, err := a.client.Do(req)
 		if err != nil {
 			return nil, err

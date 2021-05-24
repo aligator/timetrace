@@ -9,5 +9,5 @@ type Project struct {
 
 type CreateProject struct {
 	Name     string `json:"name"`
-	IsPublic string `json:"isPublic"`
+	IsPublic bool   `json:"isPublic"`
 }
